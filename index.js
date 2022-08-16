@@ -2,35 +2,19 @@ require("dotenv").config();
 const { google } = require("googleapis");
 const {
   findAndReturnTheRightSheetName,
+  processSheetData,
   createDateRangeFromSheetData,
   extractTimesFromSheetData,
   formatIntoShifts,
 } = require("./helpers");
 
-const processSheetData = async (data) => {
-  const usersDB = [
-    {
-      initials: "DAH",
-    },
-  ];
-  const sheetDates = data[0];
-  const dateRanges = createDateRangeFromSheetData(sheetDates);
-  const allShiftCells = extractTimesFromSheetData(data, dateRanges, usersDB);
-  const allShiftsArr = Object.values(allShiftCells);
+const arg = process.argv.slice(2);
+const user = arg[0]
+const range = arg[1]
 
-  const shiftsPerPerson = [];
-
-  for (const person of allShiftsArr) {
-    const shifts = formatIntoShifts(person.shiftCells);
-
-    shiftsPerPerson.push({
-      person: person.initials,
-      shifts,
-    });
-  }
-
-  return shiftsPerPerson;
-};
+if (!user) {
+  return console.log("Error: No name code provided")
+}
 
 const getSpreadSheetData = async () => {
   try {
@@ -39,7 +23,7 @@ const getSpreadSheetData = async () => {
       fields: "namedRanges",
     });
     const namedRanges = response.data.namedRanges;
-    sheetName = findAndReturnTheRightSheetName(namedRanges);
+    sheetName = findAndReturnTheRightSheetName(namedRanges,range);
 
     // console.log("sheetName", sheetName);
     if (!sheetName) {
@@ -51,7 +35,7 @@ const getSpreadSheetData = async () => {
       range: sheetName,
       majorDimension: "ROWS",
     });
-    const shifts = await processSheetData(result.data.values);
+    const shifts = await processSheetData(result.data.values,user);
     for (const shift of shifts) {
       console.log(
         `\nShifts for the week of ${sheetName} for ${shift.person}:\n--------`

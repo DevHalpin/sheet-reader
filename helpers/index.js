@@ -2,8 +2,6 @@ const dayjs = require("dayjs");
 const weekOfYear = require("dayjs/plugin/weekOfYear");
 require("dotenv").config();
 
-const arg = process.argv.slice(2);
-
 dayjs.extend(weekOfYear);
 
 const createDateRangeFromSheetData = (dateArr) => {
@@ -22,20 +20,19 @@ const createDateRangeFromSheetData = (dateArr) => {
   return dateRanges;
 };
 
-const extractTimesFromSheetData = (arr2D, dateRanges, database) => {
+const extractTimesFromSheetData = (arr2D, dateRanges, initials) => {
   const arrStartIndex = 6;
   const arrEndIndex = 30;
   const allShiftCells = {};
 
-  const allInitials = database.map(({ initials, email }, i) => {
-    allShiftCells[initials] = {
-      initials,
-      email,
-      shiftCells: [],
-    };
+  // const allInitials = database.map(({ initials}) => {
+  allShiftCells[initials] = {
+    initials,
+    shiftCells: [],
+  };
 
-    return initials;
-  });
+  // return initials;
+  // });
 
   for (let y = arrStartIndex; y < arrEndIndex; ++y) {
     const row = arr2D[y];
@@ -59,7 +56,7 @@ const extractTimesFromSheetData = (arr2D, dateRanges, database) => {
         continue;
       }
 
-      if (!allInitials.includes(cell)) {
+      if (cell !== initials) {
         continue;
       }
       // if (cell !== process.env.MENTOR_INITIALS) {
@@ -82,17 +79,17 @@ const extractTimesFromSheetData = (arr2D, dateRanges, database) => {
 
 const formatIntoShifts = (shiftCells) => {
   shiftCells.sort((a, b) => a.timePST < b.timePST);
-
+  
   const groupedShifts = {};
   const parsedShifts = [];
-
+  
   for (const shiftCell of shiftCells) {
     if (!groupedShifts[shiftCell.day]) {
       groupedShifts[shiftCell.day] = [];
     }
     groupedShifts[shiftCell.day].push(shiftCell);
   }
-
+  
   for (const day in groupedShifts) {
     let startTime = groupedShifts[day][0].timePST;
     let endTime;
@@ -138,15 +135,34 @@ const formatIntoShifts = (shiftCells) => {
     return 0;
   };
   parsedShifts.sort(compare);
-
+  
   return parsedShifts;
 };
 
-const generateThisSchedulePeriod = () => {
+const processSheetData = async (data, user) => {
+  const sheetDates = data[0];
+  const dateRanges = createDateRangeFromSheetData(sheetDates);
+  const allShiftCells = extractTimesFromSheetData(data, dateRanges, user);
+  const allShiftsArr = Object.values(allShiftCells);
+
+  const shiftsPerPerson = [];
+
+
+  for (const person of allShiftsArr) {
+    const shifts = formatIntoShifts(person.shiftCells);
+
+    shiftsPerPerson.push({
+      person: person.initials,
+      shifts,
+    });
+  }
+  return shiftsPerPerson;
+};
+const generateThisSchedulePeriod = (delta) => {
   const currentWeek = dayjs().week();
-  const delta = arg[0] ? Number(arg[0]) : 0;
+
   const nextMonday = dayjs()
-    .week(currentWeek + delta)
+    .week(currentWeek + Number(delta))
     .day(1);
   const nextSunday = nextMonday.add(6, "day");
 
@@ -159,9 +175,12 @@ const generateThisSchedulePeriod = () => {
   };
 };
 
-const findAndReturnTheRightSheetName = (namedRanges) => {
-  const periodDates = generateThisSchedulePeriod();
+const findAndReturnTheRightSheetName = (namedRanges, range) => {
+  const delta = range ? range : 0;
+  const periodDates = generateThisSchedulePeriod(delta);
   const periodDatesArr = Object.values(periodDates);
+
+  console.log(`Date range provided: ${periodDatesArr[1]} ${periodDatesArr[0]} ${periodDatesArr[2]} - ${periodDatesArr[4]} ${periodDatesArr[3]} ${periodDatesArr[2]}`)
 
   for (const range of namedRanges) {
     const rangeName = range.name;
@@ -201,4 +220,5 @@ module.exports = {
   formatIntoShifts,
   findAndReturnTheRightSheetName,
   displayShifts,
+  processSheetData,
 };
