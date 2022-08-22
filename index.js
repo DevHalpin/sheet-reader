@@ -3,9 +3,6 @@ const { google } = require("googleapis");
 const {
   findAndReturnTheRightSheetName,
   processSheetData,
-  createDateRangeFromSheetData,
-  extractTimesFromSheetData,
-  formatIntoShifts,
 } = require("./helpers");
 
 const arg = process.argv.slice(2);
@@ -53,7 +50,7 @@ const getSpreadSheetData = async () => {
 
 const authenticate = async () => {
   const auth = new google.auth.GoogleAuth({
-    keyFile: "./schedule-358603-bad10ba30c5d.json",
+    keyFile: process.env.PATH_TO_KEYFILE,
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
 
