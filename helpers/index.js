@@ -202,7 +202,7 @@ const displayShifts = (shifts) => {
 };
 
 const convertTime = (time, period) => {
-  if (period.toLowerCase() == 'pm') {
+  if (period.toLowerCase() === 'pm') {
     if (time < 12) {
       return time + 12;
     }
