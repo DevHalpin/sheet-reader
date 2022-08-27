@@ -39,20 +39,17 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
     let timePST = "";
     let time = "";
     let tz = "";
-
     for (let x = 0; x < row.length; ++x) {
       const cell = row[x];
 
       if (x === 0) {
         time = cell;
         tz = cell.split(" ")[1];
-
         continue;
       }
 
       if (x === 1) {
         timePST = cell;
-
         continue;
       }
 
@@ -69,7 +66,6 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
         timePST: tzDelta !== 0 ? Number(timePST)+tzDelta :Number(timePST),
         day: dateRanges[x],
       };
-
       allShiftCells[cell].shiftCells.push(cellObj);
     }
   }
@@ -89,7 +85,6 @@ const formatIntoShifts = (shiftCells) => {
     }
     groupedShifts[shiftCell.day].push(shiftCell);
   }
-  
   for (const day in groupedShifts) {
     let startTime = groupedShifts[day][0].timePST;
     let endTime;
@@ -103,6 +98,8 @@ const formatIntoShifts = (shiftCells) => {
         if (!endTime) {
           endTime = startTime + 1;
         }
+        startTime += 3;
+        endTime += 3;
         parsedShifts.push({
           startTime: startTime > 12 ? startTime - 12 : startTime,
           startPeriod: startTime >= 12 ? "pm" : "am",
@@ -117,6 +114,8 @@ const formatIntoShifts = (shiftCells) => {
     if (!endTime) {
       endTime = startTime + 1;
     }
+    startTime += 3;
+    endTime += 3;
     parsedShifts.push({
       startTime: startTime > 12 ? startTime - 12 : startTime,
       startPeriod: startTime >= 12 ? "pm" : "am",
@@ -145,13 +144,11 @@ const processSheetData = async (data, user, tzDelta) => {
   const dateRanges = createDateRangeFromSheetData(sheetDates);
   const allShiftCells = extractTimesFromSheetData(data, dateRanges, user, delta);
   const allShiftsArr = Object.values(allShiftCells);
-
   const shiftsPerPerson = [];
 
 
   for (const person of allShiftsArr) {
     const shifts = formatIntoShifts(person.shiftCells);
-
     shiftsPerPerson.push({
       person: person.initials,
       shifts,

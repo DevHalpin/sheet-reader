@@ -23,7 +23,6 @@ const getSpreadSheetData = async () => {
     const namedRanges = response.data.namedRanges;
     sheetName = findAndReturnTheRightSheetName(namedRanges,range);
 
-    // console.log("sheetName", sheetName);
     if (!sheetName) {
       console.log("Error: No sheet data found for this date range!");
       return;
