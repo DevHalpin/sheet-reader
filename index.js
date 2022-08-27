@@ -8,6 +8,7 @@ const {
 const arg = process.argv.slice(2);
 const user = arg[0]
 const range = arg[1]
+const timeZoneDelta = arg[2]
 
 if (!user) {
   return console.log("Error: No name code provided")
@@ -32,7 +33,7 @@ const getSpreadSheetData = async () => {
       range: sheetName,
       majorDimension: "ROWS",
     });
-    const shifts = await processSheetData(result.data.values,user);
+    const shifts = await processSheetData(result.data.values,user, timeZoneDelta);
     for (const shift of shifts) {
       console.log(
         `\nShifts for the week of ${sheetName} for ${shift.person}:\n--------`

@@ -20,7 +20,7 @@ const createDateRangeFromSheetData = (dateArr) => {
   return dateRanges;
 };
 
-const extractTimesFromSheetData = (arr2D, dateRanges, initials) => {
+const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
   const arrStartIndex = 6;
   const arrEndIndex = 30;
   const allShiftCells = {};
@@ -66,7 +66,7 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials) => {
       const cellObj = {
         timezone: tz,
         time,
-        timePST: Number(timePST),
+        timePST: tzDelta !== 0 ? Number(timePST)+tzDelta :Number(timePST),
         day: dateRanges[x],
       };
 
@@ -139,10 +139,11 @@ const formatIntoShifts = (shiftCells) => {
   return parsedShifts;
 };
 
-const processSheetData = async (data, user) => {
+const processSheetData = async (data, user, tzDelta) => {
+  const delta = tzDelta ? Number(tzDelta) : 0;
   const sheetDates = data[0];
   const dateRanges = createDateRangeFromSheetData(sheetDates);
-  const allShiftCells = extractTimesFromSheetData(data, dateRanges, user);
+  const allShiftCells = extractTimesFromSheetData(data, dateRanges, user, delta);
   const allShiftsArr = Object.values(allShiftCells);
 
   const shiftsPerPerson = [];
