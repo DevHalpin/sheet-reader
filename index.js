@@ -46,14 +46,14 @@ const getSpreadSheetData = async () => {
 };
 
 const sendCalendarInvite = async (shifts) => {
-  const eventSummary = 'Lighthouse Labs Tutoring';
+  const eventSummary = 'Lighthouse Labs Mentoring';
   shifts.forEach(shift => {
     shift.shifts.forEach(async sh => {
       const event = buildEventBody(sh, eventSummary);
       const existingCalendarEvents = await listCalendarEvents();
-      const conflictingMeeting = existingCalendarEvents
+      const duplicateMentoringShift = existingCalendarEvents
           .find(conflict => new Date(conflict.start.dateTime).getTime() === event.start.dateTime.getTime() && conflict.summary === eventSummary);
-      if (!conflictingMeeting) {
+      if (!duplicateMentoringShift) {
         await createCalendarEvent(event);
       }
     })

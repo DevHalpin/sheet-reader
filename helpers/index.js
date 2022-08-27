@@ -98,8 +98,6 @@ const formatIntoShifts = (shiftCells) => {
         if (!endTime) {
           endTime = startTime + 1;
         }
-        startTime += 3;
-        endTime += 3;
         parsedShifts.push({
           startTime: startTime > 12 ? startTime - 12 : startTime,
           startPeriod: startTime >= 12 ? "pm" : "am",
@@ -114,8 +112,6 @@ const formatIntoShifts = (shiftCells) => {
     if (!endTime) {
       endTime = startTime + 1;
     }
-    startTime += 3;
-    endTime += 3;
     parsedShifts.push({
       startTime: startTime > 12 ? startTime - 12 : startTime,
       startPeriod: startTime >= 12 ? "pm" : "am",
@@ -229,7 +225,7 @@ const getMonthFromString = (monthString) => {
   return -1;
 }
 
-const buildEventBody = (shift, eventSummary) => {
+const buildCalendarEventBody = (shift, eventSummary) => {
   const dayInfo = shift.day.split(' ');
   const dayMonth = dayInfo[0].split('-');
   const day = dayMonth[0];
@@ -271,5 +267,5 @@ module.exports = {
   processSheetData,
   convertTime,
   getMonthFromString,
-  buildEventBody,
+  buildEventBody: buildCalendarEventBody,
 };
