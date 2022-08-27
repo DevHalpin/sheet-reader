@@ -25,14 +25,10 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
   const arrEndIndex = 30;
   const allShiftCells = {};
 
-  // const allInitials = database.map(({ initials}) => {
   allShiftCells[initials] = {
     initials,
     shiftCells: [],
   };
-
-  // return initials;
-  // });
 
   for (let y = arrStartIndex; y < arrEndIndex; ++y) {
     const row = arr2D[y];
@@ -56,9 +52,6 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
       if (cell !== initials) {
         continue;
       }
-      // if (cell !== process.env.MENTOR_INITIALS) {
-      //     continue;
-      // }
 
       const cellObj = {
         timezone: tz,
@@ -237,7 +230,7 @@ const buildCalendarEventBody = (shift, eventSummary) => {
   const tutoringStartDate = new Date(year, month - 1, Number(day), Number(start), 0, 0, 0);
   const tutoringEndDate = new Date(year, month - 1, Number(day), Number(end), 0, 0, 0);
 
-  const timeZone = 'America/Toronto';
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return {
     summary: eventSummary,
     description: eventSummary,
