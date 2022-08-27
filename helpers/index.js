@@ -212,6 +212,56 @@ const displayShifts = (shifts) => {
   }
 };
 
+const convertTime = (time, period) => {
+  if (period.toLowerCase() == 'pm') {
+    if (time < 12) {
+      return time + 12;
+    }
+  }
+  return time;
+}
+
+const getMonthFromString = (monthString) => {
+  const d = Date.parse(monthString + "1, 2022");
+  if(!isNaN(d)) {
+    return new Date(d).getMonth() + 1;
+  }
+  return -1;
+}
+
+const buildEventBody = (shift, eventSummary) => {
+  const dayInfo = shift.day.split(' ');
+  const dayMonth = dayInfo[0].split('-');
+  const day = dayMonth[0];
+  const month = getMonthFromString(dayMonth[1]);
+  const year = dayInfo[1];
+
+  const start = convertTime(shift.startTime, shift.startPeriod);
+  const end = convertTime(shift.endTime, shift.endPeriod);
+  const tutoringStartDate = new Date(year, month - 1, Number(day), Number(start), 0, 0, 0);
+  const tutoringEndDate = new Date(year, month - 1, Number(day), Number(end), 0, 0, 0);
+
+  const timeZone = 'America/Toronto';
+  return {
+    summary: eventSummary,
+    description: eventSummary,
+    start: {
+      dateTime: tutoringStartDate,
+      timeZone,
+    },
+    end: {
+      dateTime: tutoringEndDate,
+      timeZone,
+    },
+    reminders: {
+      'useDefault': false,
+      'overrides': [
+        {'method': 'email', 'minutes': 24 * 7},
+      ],
+    }
+  }
+}
+
 module.exports = {
   createDateRangeFromSheetData,
   extractTimesFromSheetData,
@@ -219,4 +269,7 @@ module.exports = {
   findAndReturnTheRightSheetName,
   displayShifts,
   processSheetData,
+  convertTime,
+  getMonthFromString,
+  buildEventBody,
 };
