@@ -105,5 +105,7 @@ const authenticate = async () => {
 if (process.env.NODE_ENV === "dev") {
   authenticate()
     .then(_ => getSpreadSheetData())
-    .then(shifts => sendCalendarInvite(shifts))
+    .then(shifts => {
+      if (process.env.CALENDAR_ID) sendCalendarInvite(shifts);
+    })
 }
