@@ -9,6 +9,14 @@
 - Select JSON and click Create, this will download your key
 - Copy key into project root folder and add path to file to the PATH_TO_KEYFILE entry in .env file.
 - Add spreadsheet id from scheduler spreadsheet to .env 
+- Add your service account to the list of people who can manage your google calendar
+  - Go to https://calendar.google.com
+  - Click on the gear icon at the top right then settings
+  - On the left side, under Settings for my calendars, click on the calendar you want the event to be added to
+  - Under the Share with specific people, click on Add people
+  - Enter the service account's email address and set the permission to select Make changes and manage sharing
+- Add the Google calendar ID to .env
+  - Follow this to get your Google calendar ID https://xfanatical.com/blog/how-to-find-your-google-calendar-id/
 
 ### Running the program
 Program takes three arguments: 
