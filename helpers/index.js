@@ -25,43 +25,33 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
   const arrEndIndex = 30;
   const allShiftCells = {};
 
-  // const allInitials = database.map(({ initials}) => {
   allShiftCells[initials] = {
     initials,
     shiftCells: [],
   };
-
-  // return initials;
-  // });
 
   for (let y = arrStartIndex; y < arrEndIndex; ++y) {
     const row = arr2D[y];
     let timePST = "";
     let time = "";
     let tz = "";
-
     for (let x = 0; x < row.length; ++x) {
       const cell = row[x];
 
       if (x === 0) {
         time = cell;
         tz = cell.split(" ")[1];
-
         continue;
       }
 
       if (x === 1) {
         timePST = cell;
-
         continue;
       }
 
       if (cell !== initials) {
         continue;
       }
-      // if (cell !== process.env.MENTOR_INITIALS) {
-      //     continue;
-      // }
 
       const cellObj = {
         timezone: tz,
@@ -69,7 +59,6 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
         timePST: tzDelta !== 0 ? Number(timePST)+tzDelta :Number(timePST),
         day: dateRanges[x],
       };
-
       allShiftCells[cell].shiftCells.push(cellObj);
     }
   }
@@ -89,7 +78,6 @@ const formatIntoShifts = (shiftCells) => {
     }
     groupedShifts[shiftCell.day].push(shiftCell);
   }
-  
   for (const day in groupedShifts) {
     let startTime = groupedShifts[day][0].timePST;
     let endTime;
@@ -145,13 +133,11 @@ const processSheetData = async (data, user, tzDelta) => {
   const dateRanges = createDateRangeFromSheetData(sheetDates);
   const allShiftCells = extractTimesFromSheetData(data, dateRanges, user, delta);
   const allShiftsArr = Object.values(allShiftCells);
-
   const shiftsPerPerson = [];
 
 
   for (const person of allShiftsArr) {
     const shifts = formatIntoShifts(person.shiftCells);
-
     shiftsPerPerson.push({
       person: person.initials,
       shifts,
@@ -215,6 +201,56 @@ const displayShifts = (shifts) => {
   }
 };
 
+const convertTime = (time, period) => {
+  if (period.toLowerCase() === 'pm') {
+    if (time < 12) {
+      return time + 12;
+    }
+  }
+  return time;
+}
+
+const getMonthFromString = (monthString) => {
+  const d = Date.parse(monthString + "1, 2022");
+  if(!isNaN(d)) {
+    return new Date(d).getMonth() + 1;
+  }
+  return -1;
+}
+
+const buildCalendarEventBody = (shift, eventSummary) => {
+  const dayInfo = shift.day.split(' ');
+  const dayMonth = dayInfo[0].split('-');
+  const day = dayMonth[0];
+  const month = getMonthFromString(dayMonth[1]);
+  const year = dayInfo[1];
+
+  const start = convertTime(shift.startTime, shift.startPeriod);
+  const end = convertTime(shift.endTime, shift.endPeriod);
+  const tutoringStartDate = new Date(year, month - 1, Number(day), Number(start), 0, 0, 0);
+  const tutoringEndDate = new Date(year, month - 1, Number(day), Number(end), 0, 0, 0);
+
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return {
+    summary: eventSummary,
+    description: eventSummary,
+    start: {
+      dateTime: tutoringStartDate,
+      timeZone,
+    },
+    end: {
+      dateTime: tutoringEndDate,
+      timeZone,
+    },
+    reminders: {
+      'useDefault': false,
+      'overrides': [
+        {'method': 'email', 'minutes': 24 * 7},
+      ],
+    }
+  }
+}
+
 module.exports = {
   createDateRangeFromSheetData,
   extractTimesFromSheetData,
@@ -222,4 +258,7 @@ module.exports = {
   findAndReturnTheRightSheetName,
   displayShifts,
   processSheetData,
+  convertTime,
+  getMonthFromString,
+  buildEventBody: buildCalendarEventBody,
 };
