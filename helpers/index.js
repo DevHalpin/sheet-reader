@@ -56,7 +56,7 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
       const cellObj = {
         timezone: tz,
         time,
-        timePST: tzDelta !== 0 ? Number(timePST)+tzDelta :Number(timePST),
+        timePST: tzDelta !== 0 ? Number(timePST) + tzDelta : Number(timePST),
         day: dateRanges[x],
       };
       allShiftCells[cell].shiftCells.push(cellObj);
@@ -68,10 +68,10 @@ const extractTimesFromSheetData = (arr2D, dateRanges, initials, tzDelta) => {
 
 const formatIntoShifts = (shiftCells) => {
   shiftCells.sort((a, b) => a.timePST < b.timePST);
-  
+
   const groupedShifts = {};
   const parsedShifts = [];
-  
+
   for (const shiftCell of shiftCells) {
     if (!groupedShifts[shiftCell.day]) {
       groupedShifts[shiftCell.day] = [];
@@ -123,7 +123,7 @@ const formatIntoShifts = (shiftCells) => {
     return 0;
   };
   parsedShifts.sort(compare);
-  
+
   return parsedShifts;
 };
 
@@ -131,10 +131,14 @@ const processSheetData = async (data, user, tzDelta) => {
   const delta = tzDelta ? Number(tzDelta) : 0;
   const sheetDates = data[0];
   const dateRanges = createDateRangeFromSheetData(sheetDates);
-  const allShiftCells = extractTimesFromSheetData(data, dateRanges, user, delta);
+  const allShiftCells = extractTimesFromSheetData(
+    data,
+    dateRanges,
+    user,
+    delta
+  );
   const allShiftsArr = Object.values(allShiftCells);
   const shiftsPerPerson = [];
-
 
   for (const person of allShiftsArr) {
     const shifts = formatIntoShifts(person.shiftCells);
@@ -167,12 +171,13 @@ const findAndReturnTheRightSheetName = (namedRanges, range) => {
   const periodDates = generateThisSchedulePeriod(delta);
   const periodDatesArr = Object.values(periodDates);
 
-  console.log(`Date range provided: ${periodDatesArr[1]} ${periodDatesArr[0]} ${periodDatesArr[2]} - ${periodDatesArr[4]} ${periodDatesArr[3]} ${periodDatesArr[2]}`)
+  console.log(
+    `Date range provided: ${periodDatesArr[1]} ${periodDatesArr[0]} ${periodDatesArr[2]} - ${periodDatesArr[4]} ${periodDatesArr[3]} ${periodDatesArr[2]}`
+  );
 
   for (const range of namedRanges) {
-    const rangeName = range.name;
+    const rangeName = range.properties.title;
     let foundAllNames = true;
-
     for (const dateVal of periodDatesArr) {
       if (!rangeName.includes(dateVal)) {
         foundAllNames = false;
@@ -183,12 +188,15 @@ const findAndReturnTheRightSheetName = (namedRanges, range) => {
     if (!foundAllNames) {
       continue;
     }
-
-    return rangeName.split("!")[0]; // get rid of any sheets commands in name
+    if (rangeName.includes("TI's")) {
+      continue;
+    }
+    return rangeName;
   }
+  
 };
 
-const displayShifts = (shifts) => {
+const displayShifts = (shifts,sheetName) => {
   for (const shift of shifts) {
     console.log(
       `\nShifts for the week of ${sheetName} for ${shift.person}:\n--------`
@@ -202,33 +210,49 @@ const displayShifts = (shifts) => {
 };
 
 const convertTime = (time, period) => {
-  if (period.toLowerCase() === 'pm') {
+  if (period.toLowerCase() === "pm") {
     if (time < 12) {
       return time + 12;
     }
   }
   return time;
-}
+};
 
 const getMonthFromString = (monthString) => {
   const d = Date.parse(monthString + "1, 2022");
-  if(!isNaN(d)) {
+  if (!isNaN(d)) {
     return new Date(d).getMonth() + 1;
   }
   return -1;
-}
+};
 
 const buildCalendarEventBody = (shift, eventSummary) => {
-  const dayInfo = shift.day.split(' ');
-  const dayMonth = dayInfo[0].split('-');
+  const dayInfo = shift.day.split(" ");
+  const dayMonth = dayInfo[0].split("-");
   const day = dayMonth[0];
   const month = getMonthFromString(dayMonth[1]);
   const year = dayInfo[1];
 
   const start = convertTime(shift.startTime, shift.startPeriod);
   const end = convertTime(shift.endTime, shift.endPeriod);
-  const tutoringStartDate = new Date(year, month - 1, Number(day), Number(start), 0, 0, 0);
-  const tutoringEndDate = new Date(year, month - 1, Number(day), Number(end), 0, 0, 0);
+  const tutoringStartDate = new Date(
+    year,
+    month - 1,
+    Number(day),
+    Number(start),
+    0,
+    0,
+    0
+  );
+  const tutoringEndDate = new Date(
+    year,
+    month - 1,
+    Number(day),
+    Number(end),
+    0,
+    0,
+    0
+  );
 
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return {
@@ -243,13 +267,11 @@ const buildCalendarEventBody = (shift, eventSummary) => {
       timeZone,
     },
     reminders: {
-      'useDefault': false,
-      'overrides': [
-        {'method': 'email', 'minutes': 24 * 7},
-      ],
-    }
-  }
-}
+      useDefault: false,
+      overrides: [{ method: "email", minutes: 24 * 7 }],
+    },
+  };
+};
 
 module.exports = {
   createDateRangeFromSheetData,
